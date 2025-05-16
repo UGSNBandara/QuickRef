@@ -1,0 +1,1 @@
+Thi VDB folder store the temporary vector database .pkl files
