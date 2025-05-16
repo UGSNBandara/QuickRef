@@ -14,6 +14,7 @@ import os
 
 load_dotenv()
 
+#The LLM Model Defined
 llm = ChatNVIDIA(
   model="tiiuae/falcon3-7b-instruct",
   temperature=0.2,
@@ -21,75 +22,85 @@ llm = ChatNVIDIA(
   max_tokens=1024,
 )
 
-st.title("Document Based Answering")
+#check the session memory
+if 'vector_db' not in st.session_state:
+    st.session_state.vector_db = None
 
-st.sidebar.title("Enter yout URLS")
+st.title("Quick Ref - Quick refer through web and pdf")
+st.sidebar.title("Enter the URLS")
+
+# Initialize session state variables
+if "vector_db" not in st.session_state:
+    st.session_state.vector_db = None
+if "question" not in st.session_state:
+    st.session_state.question = ""
+if "answer" not in st.session_state:
+    st.session_state.answer = ""
+if "sources" not in st.session_state:
+    st.session_state.sources = []
 
 urls = []
 for x in range(3):
     url = st.sidebar.text_input(f'URL {x}')
     urls.append(url)
-    
+
 processed = st.sidebar.button("Process")
 
-
 main_placeholder = st.empty()
-file_path = 'VDB_store/vdb.pkl'
 
 if processed:
+    st.session_state.question = ""
+    st.session_state.answer = ""
+    st.session_state.sources = []
     
-    main_placeholder.text('URL are loading...')
-    #step 01 loading urls content using unstructured loader
+    main_placeholder.text('URL loading Started...✅✅✅')
+    # Step 01: Loading URLs content using unstructured loader
     loader = UnstructuredURLLoader(urls=urls)
     data = loader.load()
     
-    main_placeholder.text('Loaded Data splitting into chunks...')    
-    #step 02 Split the loaded data into chunks
+    main_placeholder.text('Splitting Started...✅✅✅')    
+    # Step 02: Split the loaded data into chunks
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size = 800,
-        chunk_overlap = 80,
+        chunk_size=800,
+        chunk_overlap=80,
     )
     
     splited_data = splitter.split_documents(data)
     
-    main_placeholder.text('Embading...')
-    #step 03 Embade the splited data into vector form
+    main_placeholder.text('Embedding started...✅✅✅')
+    # Step 03: Embed the split data into vector form
     embedder = NVIDIAEmbeddings(model="baai/bge-m3")
     vector_db = FAISS.from_documents(splited_data, embedder)
     
-    main_placeholder.text('Saving...')
-    #step 04 save the vector db
-    
-    with open(file_path, 'wb') as f:
-        pickle.dump(vector_db, f)
-    main_placeholder.text('vectore db has Saved Succussfuly ! Now you can ask Questions')
+    main_placeholder.text('Saving started...✅✅✅')
+    # Step 04: Save the vector DB
+    st.session_state.vector_db = vector_db
+    main_placeholder.text('URL loaded Successfully! Now you can ask Questions ✅✅✅')
     time.sleep(2)
-    
-question = main_placeholder.text_input("question")
 
-if question:
-    if os.path.exists(file_path):
-        with open(file_path, 'rb') as f:
-            vector_db = pickle.load(f)
+
+st.session_state.question = main_placeholder.text_input("question", st.session_state.question)
+
+if st.session_state.question:
+    if st.session_state.vector_db:
+        vector_db = st.session_state.vector_db
         
         chain = RetrievalQAWithSourcesChain.from_llm(
-                llm = llm,
-                retriever = vector_db.as_retriever(),
-                )
+            llm=llm,
+            retriever=vector_db.as_retriever(),
+        )
         
-        result = chain({"question" : question}, return_only_outputs=True)
+        result = chain({"question": st.session_state.question}, return_only_outputs=True)
+        
+        st.session_state.answer = result['answer']
+        st.session_state.sources = result.get("sources", "").split(',')
         
         st.header("Answer : ")
-        
-        st.text(result['answer'])
+        st.text(st.session_state.answer)
         
         st.header("Source : ")
-        
-        sources = result.get("sources", "")
-        
-        sources = sources.split(',')
-        unique_sources = list(set(sources))
+        unique_sources = list(set(st.session_state.sources))
         for s in unique_sources:
             st.write(s)
     else:
-        main_placeholder.header("First enter the URLS and Process !")    
+        main_placeholder.header("First enter the URLs and Process!")
