@@ -61,7 +61,7 @@ processed = st.sidebar.button("Process")
 
 main_placeholder = st.empty()
 
-if processed & uploaded_file & urls:
+if processed and uploaded_file and urls:
     st.session_state.question = ""
     st.session_state.answer = ""
     st.session_state.sources = []
