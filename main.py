@@ -1,10 +1,9 @@
 from dotenv import load_dotenv
 import streamlit as st
-from langchain.document_loaders import UnstructuredURLLoader
-from langchain.document_loaders import UnstructuredPDFLoader
+from langchain_community.document_loaders import UnstructuredURLLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_nvidia_ai_endpoints import NVIDIAEmbeddings
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain.chains.qa_with_sources.loading import load_qa_with_sources_chain
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
@@ -21,6 +20,11 @@ llm = ChatNVIDIA(
   temperature=0.2,
   top_p=0.7,
   max_tokens=1024,
+)
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=800,
+    chunk_overlap=80,
 )
 
 #check the session memory
@@ -62,30 +66,30 @@ if processed:
     st.session_state.answer = ""
     st.session_state.sources = []
     
+    splited_data = []
+    
     if urls:
         main_placeholder.text('URL loading Started...✅✅✅')
         # Step 01: Loading URLs content using unstructured loader
         loader = UnstructuredURLLoader(urls=urls)
         data = loader.load()
+        
+        main_placeholder.text('Splitting Started...✅✅✅')   
+        splited_url_data = splitter.split_documents(data)
+        splited_data.extend(splited_url_data)
     
     if uploaded_file:
+        main_placeholder.text('PDf loading Started...✅✅✅')
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
             temp_file.write(uploaded_file.read())
             temp_file_path = temp_file.name
-        loaderPDF = UnstructuredPDFLoader(temp_file_path)
+        loaderPDF = PyPDFLoader(temp_file_path)
         dataPDF = loaderPDF.load()
-        data.append(dataPDF)
         
-    
-    main_placeholder.text('Splitting Started...✅✅✅')    
-    # Step 02: Split the loaded data into chunks
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=80,
-    )
-    
-    splited_data = splitter.split_documents(data)
-    
+        main_placeholder.text('Splitting Started...✅✅✅')   
+        splited_pdf_data = splitter.split_documents(dataPDF)
+        splited_data.extend(splited_pdf_data)
+             
     main_placeholder.text('Embedding started...✅✅✅')
     # Step 03: Embed the split data into vector form
     embedder = NVIDIAEmbeddings(model="baai/bge-m3")
@@ -110,6 +114,7 @@ if st.session_state.question:
         )
         
         result = chain({"question": st.session_state.question}, return_only_outputs=True)
+
         
         st.session_state.answer = result['answer']
         st.session_state.sources = result.get("sources", "").split(',')

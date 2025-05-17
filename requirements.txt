@@ -6,3 +6,4 @@ langchain-community
 unstructured
 faiss-cpu
 transformers
+pypdf
