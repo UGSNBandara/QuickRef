@@ -1,4 +1,3 @@
-from dotenv import load_dotenv
 import streamlit as st
 from langchain_community.document_loaders import UnstructuredURLLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -12,12 +11,12 @@ import time
 import os
 import tempfile
 
-load_dotenv()
+NVIDIA_API_KEY = st.secrets["API_KEY"]
 
 #The LLM Model Defined
 llm = ChatNVIDIA(
   model="tiiuae/falcon3-7b-instruct",
-  temperature=0.2,
+  temperature=0.7,
   top_p=0.7,
   max_tokens=1024,
 )
@@ -58,6 +57,12 @@ st.sidebar.title("Upload the PDF")
 uploaded_file = st.sidebar.file_uploader("Upload a PDF file", type="pdf")
 
 processed = st.sidebar.button("Process")
+reset = st.sidebar.button("Reset")
+
+if reset:
+    st.session_state.question = ""
+    st.session_state.answer = ""
+    st.session_state.sources = []
 
 main_placeholder = st.empty()
 

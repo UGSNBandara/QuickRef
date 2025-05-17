@@ -1,2 +1,3 @@
 .venv
 VDB_store/vbd.pkl
+.streamlit
