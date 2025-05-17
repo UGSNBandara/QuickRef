@@ -16,7 +16,7 @@ NVIDIA_API_KEY = st.secrets["API_KEY"]
 #The LLM Model Defined
 llm = ChatNVIDIA(
   model="tiiuae/falcon3-7b-instruct",
-  temperature=0.7,
+  temperature=0.3,
   top_p=0.7,
   max_tokens=1024,
   api_key=NVIDIA_API_KEY,
