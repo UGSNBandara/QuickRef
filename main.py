@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import streamlit as st
 from langchain.document_loaders import UnstructuredURLLoader
+from langchain.document_loaders import UnstructuredPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_nvidia_ai_endpoints import NVIDIAEmbeddings
 from langchain.vectorstores import FAISS
@@ -10,7 +11,7 @@ from langchain_nvidia_ai_endpoints import ChatNVIDIA
 import pickle
 import time
 import os
-
+import tempfile
 
 load_dotenv()
 
@@ -27,7 +28,7 @@ if 'vector_db' not in st.session_state:
     st.session_state.vector_db = None
 
 st.title("Quick Ref - Quick refer through web and pdf")
-st.sidebar.title("Enter the URLS")
+
 
 # Initialize session state variables
 if "vector_db" not in st.session_state:
@@ -39,10 +40,18 @@ if "answer" not in st.session_state:
 if "sources" not in st.session_state:
     st.session_state.sources = []
 
+#to add the URLs
+st.sidebar.title("Enter the URLS")
+
 urls = []
 for x in range(3):
     url = st.sidebar.text_input(f'URL {x}')
     urls.append(url)
+    
+#to upload the PDFs    
+st.sidebar.title("Upload the PDF")
+
+uploaded_file = st.sidebar.file_uploader("Upload a PDF file", type="pdf")
 
 processed = st.sidebar.button("Process")
 
@@ -53,10 +62,20 @@ if processed:
     st.session_state.answer = ""
     st.session_state.sources = []
     
-    main_placeholder.text('URL loading Started...✅✅✅')
-    # Step 01: Loading URLs content using unstructured loader
-    loader = UnstructuredURLLoader(urls=urls)
-    data = loader.load()
+    if urls:
+        main_placeholder.text('URL loading Started...✅✅✅')
+        # Step 01: Loading URLs content using unstructured loader
+        loader = UnstructuredURLLoader(urls=urls)
+        data = loader.load()
+    
+    if uploaded_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+            temp_file.write(uploaded_file.read())
+            temp_file_path = temp_file.name
+        loaderPDF = UnstructuredPDFLoader(temp_file_path)
+        dataPDF = loaderPDF.load()
+        data.append(dataPDF)
+        
     
     main_placeholder.text('Splitting Started...✅✅✅')    
     # Step 02: Split the loaded data into chunks
