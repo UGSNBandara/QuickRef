@@ -46,27 +46,37 @@ if "sources" not in st.session_state:
 #to add the URLs
 st.sidebar.title("Enter the URLS")
 
+
 urls = []
 for x in range(3):
     url = st.sidebar.text_input(f'URL {x}')
     urls.append(url)
-    
+ 
+
 #to upload the PDFs    
 st.sidebar.title("Upload the PDF")
 
+
 uploaded_file = st.sidebar.file_uploader("Upload a PDF file", type="pdf")
+
 
 processed = st.sidebar.button("Process")
 reset = st.sidebar.button("Reset")
+
 
 if reset:
     st.session_state.question = ""
     st.session_state.answer = ""
     st.session_state.sources = []
 
+
 main_placeholder = st.empty()
 
-if processed and uploaded_file and urls:
+if processed and not(uploaded_file is not None or any(url.strip() for url in urls)):
+    main_placeholder.header("Without sources can not proceed...⭕⭕⭕")
+    time.sleep(4)
+
+if processed and (uploaded_file is not None or any(url.strip() for url in urls)):
     st.session_state.question = ""
     st.session_state.answer = ""
     st.session_state.sources = []
@@ -78,9 +88,9 @@ if processed and uploaded_file and urls:
         # Step 01: Loading URLs content using unstructured loader
         loader = UnstructuredURLLoader(urls=urls)
         data = loader.load()
-        
+                
         main_placeholder.text('Splitting Started...✅✅✅')   
-        splited_url_data = splitter.split_documents(data)
+        splited_url_data = splitter.split_documents(data)          
         splited_data.extend(splited_url_data)
     
     if uploaded_file:
@@ -94,21 +104,29 @@ if processed and uploaded_file and urls:
         main_placeholder.text('Splitting Started...✅✅✅')   
         splited_pdf_data = splitter.split_documents(dataPDF)
         splited_data.extend(splited_pdf_data)
-             
-    main_placeholder.text('Embedding started...✅✅✅')
-    # Step 03: Embed the split data into vector form
-    embedder = NVIDIAEmbeddings(model="baai/bge-m3")
-    vector_db = FAISS.from_documents(splited_data, embedder)
     
-    main_placeholder.text('Saving started...✅✅✅')
-    # Step 04: Save the vector DB
-    st.session_state.vector_db = vector_db
-    main_placeholder.text('URL loaded Successfully! Now you can ask Questions ✅✅✅')
-    time.sleep(2)
-else:
-    main_placeholder.header("Please provide either URLs or a PDF file to proceed!")
+    if not splited_data:
+        main_placeholder.header("Unable to load the provided sources...❌❌❌")
+        time.sleep(3)
+    
+    if splited_data:         
+        main_placeholder.text('Embedding started...✅✅✅')
+        # Step 03: Embed the split data into vector form
+        embedder = NVIDIAEmbeddings(model="baai/bge-m3")
+        vector_db = FAISS.from_documents(splited_data, embedder)
+        
+        main_placeholder.text('Saving started...✅✅✅')
+        # Step 04: Save the vector DB
+        st.session_state.vector_db = vector_db
+        main_placeholder.text('URL loaded Successfully! Now you can ask Questions ✅✅✅')
+        time.sleep(2)
+
+
+
 
 st.session_state.question = main_placeholder.text_input("question", st.session_state.question)
+
+
 
 if st.session_state.question:
     if st.session_state.vector_db:
