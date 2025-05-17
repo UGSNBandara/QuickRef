@@ -61,7 +61,7 @@ processed = st.sidebar.button("Process")
 
 main_placeholder = st.empty()
 
-if processed:
+if processed & uploaded_file & urls:
     st.session_state.question = ""
     st.session_state.answer = ""
     st.session_state.sources = []
@@ -100,7 +100,8 @@ if processed:
     st.session_state.vector_db = vector_db
     main_placeholder.text('URL loaded Successfully! Now you can ask Questions ✅✅✅')
     time.sleep(2)
-
+else:
+    main_placeholder.header("Please provide either URLs or a PDF file to proceed!")
 
 st.session_state.question = main_placeholder.text_input("question", st.session_state.question)
 
