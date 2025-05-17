@@ -118,6 +118,8 @@ if st.session_state.question:
         
         st.session_state.answer = result['answer']
         st.session_state.sources = result.get("sources", "").split(',')
+        st.text(result)
+        time.sleep(40)
         
         st.header("Answer : ")
         st.text(st.session_state.answer)
