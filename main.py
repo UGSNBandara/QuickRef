@@ -19,6 +19,7 @@ llm = ChatNVIDIA(
   temperature=0.7,
   top_p=0.7,
   max_tokens=1024,
+  api_key=NVIDIA_API_KEY,
 )
 
 splitter = RecursiveCharacterTextSplitter(
@@ -112,7 +113,7 @@ if processed and (uploaded_file is not None or any(url.strip() for url in urls))
     if splited_data:         
         main_placeholder.text('Embedding started...✅✅✅')
         # Step 03: Embed the split data into vector form
-        embedder = NVIDIAEmbeddings(model="baai/bge-m3")
+        embedder = NVIDIAEmbeddings(model="baai/bge-m3", api_key=NVIDIA_API_KEY,)
         vector_db = FAISS.from_documents(splited_data, embedder)
         
         main_placeholder.text('Saving started...✅✅✅')
