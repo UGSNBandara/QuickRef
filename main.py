@@ -43,7 +43,7 @@ if "sources" not in st.session_state:
 
 #to add the URLs
 st.sidebar.title("Enter the URLS")
-
+st.sidebar.subheader("Please make sure to process after adding a new source 🔴🔴🔴")
 
 urls = []
 for x in range(3):
@@ -58,8 +58,8 @@ st.sidebar.title("Upload the PDF")
 uploaded_file = st.sidebar.file_uploader("Upload a PDF file", type="pdf")
 
 
-processed = st.sidebar.button("Process")
-reset = st.sidebar.button("Reset")
+processed = st.sidebar.button("Process ✅")
+reset = st.sidebar.button("Reset 🔄")
 
 
 if reset:
