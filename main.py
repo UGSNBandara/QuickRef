@@ -16,7 +16,7 @@ NVIDIA_API_KEY = st.secrets["API_KEY"]
 #The LLM Model Defined
 llm = ChatNVIDIA(
   model="tiiuae/falcon3-7b-instruct",
-  temperature=0.3,
+  temperature=0.2,
   top_p=0.7,
   max_tokens=1024,
   api_key=NVIDIA_API_KEY,
@@ -31,14 +31,11 @@ splitter = RecursiveCharacterTextSplitter(
 if 'vector_db' not in st.session_state:
     st.session_state.vector_db = None
 
-st.title("Quick Ref - Quick refer through web and pdf")
-
+st.title("QuickRef: Fast Answers from Web and PDF Sources")
 
 # Initialize session state variables
 if "vector_db" not in st.session_state:
     st.session_state.vector_db = None
-if "question" not in st.session_state:
-    st.session_state.question = ""
 if "answer" not in st.session_state:
     st.session_state.answer = ""
 if "sources" not in st.session_state:
@@ -66,7 +63,7 @@ reset = st.sidebar.button("Reset")
 
 
 if reset:
-    st.session_state.question = ""
+    question = ""
     st.session_state.answer = ""
     st.session_state.sources = []
 
@@ -78,7 +75,7 @@ if processed and not(uploaded_file is not None or any(url.strip() for url in url
     time.sleep(4)
 
 if processed and (uploaded_file is not None or any(url.strip() for url in urls)):
-    st.session_state.question = ""
+    question = ""
     st.session_state.answer = ""
     st.session_state.sources = []
     
@@ -125,11 +122,11 @@ if processed and (uploaded_file is not None or any(url.strip() for url in urls))
 
 
 
-st.session_state.question = main_placeholder.text_input("question", st.session_state.question)
+question = main_placeholder.text_input("question")
+Ask = st.button("Ask")
 
 
-
-if st.session_state.question:
+if Ask and question:
     if st.session_state.vector_db:
         vector_db = st.session_state.vector_db
         
@@ -138,11 +135,14 @@ if st.session_state.question:
             retriever=vector_db.as_retriever(),
         )
         
-        result = chain({"question": st.session_state.question}, return_only_outputs=True)
+        result = chain({"question": question}, return_only_outputs=True)
 
         
         st.session_state.answer = result['answer']
         st.session_state.sources = result.get("sources", "").split(',')
+
+        st.header("Question : ")
+        st.text(question)        
         
         st.header("Answer : ")
         st.text(st.session_state.answer)
