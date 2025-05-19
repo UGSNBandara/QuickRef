@@ -42,8 +42,8 @@ if "sources" not in st.session_state:
     st.session_state.sources = []
 
 #to add the URLs
-st.sidebar.title("Enter the URLS")
-st.sidebar.subheader("Please make sure to process after adding a new source 🔴🔴🔴")
+st.sidebar.title("Enter the URLs")
+st.sidebar.subheader("Please ensure to process after adding a new source 🔴🔴🔴")
 
 urls = []
 for x in range(3):
@@ -51,11 +51,11 @@ for x in range(3):
     urls.append(url)
  
 
-#to upload the PDFs    
+#to upload the PDF    
 st.sidebar.title("Upload the PDF")
 
 
-uploaded_file = st.sidebar.file_uploader("Upload a PDF file", type="pdf")
+uploaded_file = st.sidebar.file_uploader("Upload the PDF file", type="pdf")
 
 
 processed = st.sidebar.button("Process ✅")
@@ -122,7 +122,7 @@ if processed and (uploaded_file is not None or any(url.strip() for url in urls))
 
 
 
-question = main_placeholder.text_input("question")
+question = main_placeholder.text_input("Type your question here")
 Ask = st.button("Ask")
 
 
@@ -141,13 +141,13 @@ if Ask and question:
         st.session_state.answer = result['answer']
         st.session_state.sources = result.get("sources", "").split(',')
 
-        st.header("Question : ")
+        st.header("Question :")
         st.text(question)        
         
-        st.header("Answer : ")
+        st.header("Answer :")
         st.text(st.session_state.answer)
         
-        st.header("Source : ")
+        st.header("Source :")
         unique_sources = list(set(st.session_state.sources))
         for s in unique_sources:
             st.write(s)
